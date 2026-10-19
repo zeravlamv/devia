@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Devia — Lanzador</title>
+  <style>
+    :root {
+      --paper: #f3efe6;
+      --ink: #1c1915;
+      --muted: #5e584e;
+      --line: #ddd4c6;
+      --card: #fbf8f2;
+      --syquo: #8d3d22;
+      --syquo-soft: #f3e4dc;
+      --datia: #0f4c56;
+      --datia-soft: #dce9ea;
+      --ok: #1d6b43;
+      --wait: #8a5a12;
+      --bad: #8d2d2d;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #efe2d2 0%, transparent 55%),
+        radial-gradient(900px 420px at 100% 0%, #d7e4e2 0%, transparent 50%),
+        var(--paper);
+      font-family: "Segoe UI", Candara, sans-serif;
+      line-height: 1.5;
+    }
+
+    .wrap {
+      width: min(1080px, calc(100% - 2.5rem));
+      margin: 0 auto;
+      padding: 2.5rem 0 4rem;
+    }
+
+    header { margin-bottom: 2rem; }
+
+    .kicker {
+      margin: 0 0 0.4rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Palatino, "Palatino Linotype", Georgia, serif;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 0.95;
+    }
+
+    .lead {
+      max-width: 38rem;
+      margin: 0.9rem 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    article {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1.4rem 1.4rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    article.syquo { box-shadow: inset 6px 0 0 var(--syquo); }
+    article.datia { box-shadow: inset 6px 0 0 var(--datia); }
+
+    .tag {
+      display: inline-block;
+      width: fit-content;
+      margin: 0 0 0.7rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .syquo .tag { background: var(--syquo-soft); color: var(--syquo); }
+    .datia .tag { background: var(--datia-soft); color: var(--datia); }
+
+    h2 {
+      margin: 0;
+      font-family: Palatino, "Palatino Linotype", Georgia, serif;
+      font-size: 2rem;
+      font-weight: 600;
+    }
+
+    .summary { margin: 0.7rem 0 0; }
+
+    dl {
+      margin: 1rem 0 0;
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 5.5rem 1fr;
+      gap: 0.6rem;
+      align-items: baseline;
+    }
+
+    dt {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    dd {
+      margin: 0;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 0.86rem;
+      overflow-wrap: anywhere;
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      min-height: 1.5rem;
+      font-size: 0.92rem;
+    }
+
+    .dot {
+      width: 0.65rem;
+      height: 0.65rem;
+      border-radius: 50%;
+      background: var(--muted);
+      flex: none;
+    }
+
+    .status-line.up .dot { background: var(--ok); }
+    .status-line.wait .dot { background: var(--wait); }
+    .status-line.down .dot { background: #b7b1a6; }
+    .status-line.bad .dot { background: var(--bad); }
+
+    .actions {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: auto;
+      padding-top: 1.1rem;
+    }
+
+    button, .open {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.65rem 1.05rem;
+      font: inherit;
+      font-size: 0.95rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button:disabled { cursor: wait; opacity: 0.7; }
+
+    .syquo button { background: var(--syquo); color: #fffaf6; }
+    .datia button { background: var(--datia); color: #f4fbfb; }
+
+    .open {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .open[aria-disabled="true"] {
+      pointer-events: none;
+      opacity: 0.45;
+    }
+
+    .note {
+      margin: 0.7rem 0 0;
+      min-height: 1.2rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    footer {
+      margin-top: 1.6rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .banner {
+      display: none;
+      margin-bottom: 1rem;
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      background: #f8e7c8;
+      color: #6a4710;
+    }
+
+    .banner.show { display: block; }
+
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+      .wrap { width: min(1080px, calc(100% - 1.5rem)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="banner" id="file-banner">
+      Esta página hay que abrirla con el lanzador. Haz doble clic en <strong>iniciar.bat</strong>.
+    </p>
+    <header>
+      <p class="kicker">Escritorio local</p>
+      <h1>Devia</h1>
+      <p class="lead">
+        Desde aquí arrancas Syquo y Datia. Cada botón abre una consola con su servidor
+        y, cuando responde, puedes entrar en la aplicación.
+      </p>
+    </header>
+
+    <main class="grid">
+      <article class="syquo" data-app="syquo">
+        <p class="tag">Documentos</p>
+        <h2>Syquo</h2>
+        <p class="summary">
+          Analítica documental con IA para asesorías y empresas. Recoge facturas,
+          balances y extractos desde la bandeja o el correo, los analiza, los guarda
+          en la biblioteca y prepara la pre-contabilización y los informes.
+          El ciclo es capturar, analizar, archivar e informar. No sustituye al ERP.
+          El código del proyecto se llama Tatai.
+        </p>
+        <dl>
+          <div class="row"><dt>Carpeta</dt><dd>E:\priveria\tatai</dd></div>
+          <div class="row"><dt>Comando</dt><dd>py manage.py runserver 8000</dd></div>
+          <div class="row"><dt>Dirección</dt><dd>http://127.0.0.1:8000/</dd></div>
+        </dl>
+        <p class="status-line down" data-status><span class="dot"></span><span data-label>Comprobando…</span></p>
+        <p class="note" data-note></p>
+        <div class="actions">
+          <button type="button" data-launch>Lanzar Syquo</button>
+          <a class="open" data-open href="http://127.0.0.1:8000/" target="_blank" rel="noopener" aria-disabled="true">Abrir</a>
+        </div>
+      </article>
+
+      <article class="datia" data-app="datia">
+        <p class="tag">Negocio</p>
+        <h2>Datia</h2>
+        <p class="summary">
+          Inteligencia de negocio conectada al ERP en solo lectura. Reúne ventas,
+          finanzas, tesorería y compras en un cuadro de mando, responde preguntas
+          en lenguaje natural y redacta informes. La IA corre en local y SQL Guard
+          revisa cada consulta antes de tocar los datos.
+        </p>
+        <dl>
+          <div class="row"><dt>Carpeta</dt><dd>E:\datia</dd></div>
+          <div class="row"><dt>Comando</dt><dd>py manage.py runserver 8001</dd></div>
+          <div class="row"><dt>Dirección</dt><dd>http://127.0.0.1:8001/</dd></div>
+        </dl>
+        <p class="status-line down" data-status><span class="dot"></span><span data-label>Comprobando…</span></p>
+        <p class="note" data-note></p>
+        <div class="actions">
+          <button type="button" data-launch>Lanzar Datia</button>
+          <a class="open" data-open href="http://127.0.0.1:8001/" target="_blank" rel="noopener" aria-disabled="true">Abrir</a>
+        </div>
+      </article>
+    </main>
+
+    <footer>
+      Para detener una aplicación, pulsa Ctrl+C en su consola. Cerrar esta página no apaga
+      Syquo ni Datia. El lanzador solo escucha en este equipo, en el puerto 8090.
+    </footer>
+  </div>
+
+  <script>
+    const cards = document.querySelectorAll("article[data-app]");
+
+    if (location.protocol === "file:") {
+      document.getElementById("file-banner").classList.add("show");
+    }
+
+    const launchLabel = { syquo: "Lanzar Syquo", datia: "Lanzar Datia" };
+
+    function paint(card, info, pending) {
+      const line = card.querySelector("[data-status]");
+      const label = card.querySelector("[data-label]");
+      const open = card.querySelector("[data-open]");
+      const button = card.querySelector("[data-launch]");
+      const name = card.dataset.app;
+      line.classList.remove("up", "wait", "down", "bad");
+      if (pending) {
+        line.classList.add("wait");
+        label.textContent = "Arrancando…";
+        button.disabled = true;
+        button.textContent = "Arrancando…";
+        open.setAttribute("aria-disabled", "true");
+        return;
+      }
+      if (info && info.running) {
+        line.classList.add("up");
+        label.textContent = "En marcha en el puerto " + info.port;
+        open.setAttribute("aria-disabled", "false");
+        button.disabled = true;
+        button.textContent = "En marcha";
+      } else if (info && info.exited) {
+        line.classList.add("bad");
+        label.textContent = "La consola se cerró antes de responder";
+        open.setAttribute("aria-disabled", "true");
+        button.disabled = false;
+        button.textContent = launchLabel[name];
+      } else {
+        line.classList.add("down");
+        label.textContent = "Detenida";
+        open.setAttribute("aria-disabled", "true");
+        button.disabled = false;
+        button.textContent = launchLabel[name];
+      }
+    }
+
+    async function refresh() {
+      if (location.protocol === "file:") return;
+      try {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+        cards.forEach((card) => {
+          if (card.dataset.pending === "1") return;
+          paint(card, data[card.dataset.app], false);
+        });
+      } catch (err) {
+        cards.forEach((card) => {
+          const label = card.querySelector("[data-label]");
+          label.textContent = "Sin conexión con el lanzador";
+        });
+      }
+    }
+
+    async function launch(card) {
+      const name = card.dataset.app;
+      const note = card.querySelector("[data-note]");
+      card.dataset.pending = "1";
+      note.textContent = "";
+      paint(card, null, true);
+      try {
+        const res = await fetch("/api/" + name + "/start", { method: "POST" });
+        const data = await res.json();
+        if (!data.ok) {
+          card.dataset.pending = "0";
+          note.textContent = data.error || "No se pudo lanzar.";
+          paint(card, data, false);
+          return;
+        }
+        if (data.state === "already_running") {
+          card.dataset.pending = "0";
+          note.textContent = "El puerto ya estaba ocupado por esta aplicación.";
+          paint(card, data, false);
+          return;
+        }
+        note.textContent = "Consola abierta. Esperando a que el servidor responda.";
+        const started = Date.now();
+        const timer = setInterval(async () => {
+          const statusRes = await fetch("/api/status");
+          const status = await statusRes.json();
+          const info = status[name];
+          if (info.running) {
+            clearInterval(timer);
+            card.dataset.pending = "0";
+            note.textContent = "Lista para abrir.";
+            paint(card, info, false);
+          } else if (info.exited || Date.now() - started > 25000) {
+            clearInterval(timer);
+            card.dataset.pending = "0";
+            note.textContent = info.exited
+              ? "Revisa la consola: el proceso terminó."
+              : "Sigue sin responder. Mira la consola por si Django muestra un error.";
+            paint(card, info, false);
+          }
+        }, 1000);
+      } catch (err) {
+        card.dataset.pending = "0";
+        note.textContent = "No se pudo hablar con el lanzador.";
+        paint(card, null, false);
+      }
+    }
+
+    cards.forEach((card) => {
+      card.querySelector("[data-launch]").addEventListener("click", () => launch(card));
+    });
+
+    refresh();
+    setInterval(refresh, 4000);
+  </script>
+</body>
+</html>
