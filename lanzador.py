@@ -1,4 +1,4 @@
-"""Lanzador local de Syquo y Datia. Escucha solo en 127.0.0.1:8090."""
+"""Lanzador local de Syquo, Datia y Okia. Escucha solo en 127.0.0.1:8090."""
 
 from __future__ import annotations
 
@@ -26,6 +26,16 @@ APPS = {
         "cwd": r"E:\datia",
         "port": 8001,
         "args": ["py", "manage.py", "runserver", "8001"],
+    },
+    "okia": {
+        "cwd": r"E:\priveria\okia",
+        "port": 8002,
+        "args": [
+            r"E:\priveria\okia\.venv\Scripts\python.exe",
+            "manage.py",
+            "runserver",
+            "8002",
+        ],
     },
 }
 
@@ -120,6 +130,7 @@ def main() -> None:
     print(f"Devia escuchando en {url}")
     print("Syquo  -> E:\\priveria\\tatai  puerto 8000")
     print("Datia  -> E:\\datia           puerto 8001")
+    print("Okia   -> E:\\priveria\\okia   puerto 8002")
     print("Cierra esta ventana para apagar solo el lanzador.")
     threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:
