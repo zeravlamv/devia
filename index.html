@@ -251,7 +251,7 @@
           El código del proyecto se llama Tatai.
         </p>
         <dl>
-          <div class="row"><dt>Carpeta</dt><dd>E:\priveria\tatai</dd></div>
+          <div class="row"><dt>Carpeta</dt><dd data-folder>Buscando en E: o F:…</dd></div>
           <div class="row"><dt>Comando</dt><dd>py manage.py runserver 8000</dd></div>
           <div class="row"><dt>Dirección</dt><dd>http://127.0.0.1:8000/</dd></div>
         </dl>
@@ -273,7 +273,7 @@
           revisa cada consulta antes de tocar los datos.
         </p>
         <dl>
-          <div class="row"><dt>Carpeta</dt><dd>E:\datia</dd></div>
+          <div class="row"><dt>Carpeta</dt><dd data-folder>Buscando en E: o F:…</dd></div>
           <div class="row"><dt>Comando</dt><dd>py manage.py runserver 8001</dd></div>
           <div class="row"><dt>Dirección</dt><dd>http://127.0.0.1:8001/</dd></div>
         </dl>
@@ -296,7 +296,7 @@
           del mes. Cada persona solo ve sus empresas.
         </p>
         <dl>
-          <div class="row"><dt>Carpeta</dt><dd>E:\priveria\okia</dd></div>
+          <div class="row"><dt>Carpeta</dt><dd data-folder>Buscando en E: o F:…</dd></div>
           <div class="row"><dt>Comando</dt><dd>.venv\Scripts\python.exe manage.py runserver 8002</dd></div>
           <div class="row"><dt>Dirección</dt><dd>http://127.0.0.1:8002/</dd></div>
         </dl>
@@ -330,6 +330,8 @@
       const open = card.querySelector("[data-open]");
       const button = card.querySelector("[data-launch]");
       const name = card.dataset.app;
+      const folder = card.querySelector("[data-folder]");
+      if (info && info.cwd && folder) folder.textContent = info.cwd;
       line.classList.remove("up", "wait", "down", "bad");
       if (pending) {
         line.classList.add("wait");
@@ -357,6 +359,9 @@
         open.setAttribute("aria-disabled", "true");
         button.disabled = false;
         button.textContent = launchLabel[name];
+        if (info && info.found === false) {
+          label.textContent = "No está en E: ni en F:";
+        }
       }
     }
 

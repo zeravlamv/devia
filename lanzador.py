@@ -16,26 +16,23 @@ PORT = 8090
 ROOT = Path(__file__).resolve().parent
 INDEX = ROOT / "index.html"
 
+DRIVES = ("E:", "F:")
+
 APPS = {
     "syquo": {
-        "cwd": r"E:\priveria\tatai",
+        "relative": r"priveria\tatai",
         "port": 8000,
-        "args": ["py", "manage.py", "runserver", "8000"],
+        "python": None,
     },
     "datia": {
-        "cwd": r"E:\datia",
+        "relative": "datia",
         "port": 8001,
-        "args": ["py", "manage.py", "runserver", "8001"],
+        "python": None,
     },
     "okia": {
-        "cwd": r"E:\priveria\okia",
+        "relative": r"priveria\okia",
         "port": 8002,
-        "args": [
-            r"E:\priveria\okia\.venv\Scripts\python.exe",
-            "manage.py",
-            "runserver",
-            "8002",
-        ],
+        "python": r".venv\Scripts\python.exe",
     },
 }
 
@@ -49,16 +46,53 @@ def port_open(port: int) -> bool:
         return sock.connect_ex((HOST, port)) == 0
 
 
+def candidate_folders(name: str) -> list[Path]:
+    relative = APPS[name]["relative"]
+    return [Path(drive + "\\") / relative for drive in DRIVES]
+
+
+def locate(name: str) -> Path | None:
+    for folder in candidate_folders(name):
+        if (folder / "manage.py").is_file():
+            return folder
+    return None
+
+
+def launch_args(name: str, folder: Path) -> list[str]:
+    app = APPS[name]
+    port = str(app["port"])
+    python = app["python"]
+    if python:
+        return [str(folder / python), "manage.py", "runserver", port]
+    return ["py", "manage.py", "runserver", port]
+
+
+def command_label(name: str) -> str:
+    app = APPS[name]
+    port = app["port"]
+    if app["python"]:
+        return f"{app['python']} manage.py runserver {port}"
+    return f"py manage.py runserver {port}"
+
+
 def app_status(name: str) -> dict:
     app = APPS[name]
+    folder = locate(name)
     running = port_open(app["port"])
     proc = _procs.get(name)
     exited = proc is not None and proc.poll() is not None
+    if folder is None:
+        tried = " ni en ".join(str(path) for path in candidate_folders(name))
+        cwd = f"No está en {tried}"
+    else:
+        cwd = str(folder)
     return {
         "running": running,
+        "found": folder is not None,
         "port": app["port"],
         "url": f"http://{HOST}:{app['port']}/",
-        "cwd": app["cwd"],
+        "cwd": cwd,
+        "command": command_label(name),
         "exited": exited and not running,
         "code": proc.returncode if exited else None,
     }
@@ -66,11 +100,17 @@ def app_status(name: str) -> dict:
 
 def start_app(name: str) -> dict:
     app = APPS[name]
-    folder = Path(app["cwd"])
-    if not folder.is_dir():
-        return {"ok": False, "error": f"No existe la carpeta {folder}"}
-    if not (folder / "manage.py").is_file():
-        return {"ok": False, "error": f"No hay manage.py en {folder}"}
+    folder = locate(name)
+    if folder is None:
+        tried = " ni en ".join(str(path) for path in candidate_folders(name))
+        return {"ok": False, "error": f"No está en {tried}", **app_status(name)}
+    python = app["python"]
+    if python and not (folder / python).is_file():
+        return {
+            "ok": False,
+            "error": f"No está el Python del entorno en {folder / python}",
+            **app_status(name),
+        }
     if port_open(app["port"]):
         return {"ok": True, "state": "already_running", **app_status(name)}
 
@@ -78,7 +118,7 @@ def start_app(name: str) -> dict:
         if port_open(app["port"]):
             return {"ok": True, "state": "already_running", **app_status(name)}
         proc = subprocess.Popen(
-            app["args"],
+            launch_args(name, folder),
             cwd=str(folder),
             creationflags=subprocess.CREATE_NEW_CONSOLE,
         )
@@ -128,9 +168,9 @@ def main() -> None:
     server = ThreadingHTTPServer((HOST, PORT), Handler)
     url = f"http://{HOST}:{PORT}/"
     print(f"Devia escuchando en {url}")
-    print("Syquo  -> E:\\priveria\\tatai  puerto 8000")
-    print("Datia  -> E:\\datia           puerto 8001")
-    print("Okia   -> E:\\priveria\\okia   puerto 8002")
+    print("Busca cada proyecto en E: y, si no está, en F:.")
+    for name in APPS:
+        print(f"{name:<6} -> {app_status(name)['cwd']}  puerto {APPS[name]['port']}")
     print("Cierra esta ventana para apagar solo el lanzador.")
     threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:
