@@ -11,6 +11,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
+import conexion
+
 HOST = "127.0.0.1"
 PORT = 8090
 ROOT = Path(__file__).resolve().parent
@@ -141,10 +143,25 @@ class Handler(BaseHTTPRequestHandler):
             body = {name: app_status(name) for name in APPS}
             self._send(200, json.dumps(body).encode("utf-8"), "application/json; charset=utf-8")
             return
+        if path == "/api/conexion":
+            self._json(200, conexion.publico())
+            return
         self.send_error(404)
 
     def do_POST(self) -> None:
         path = urlparse(self.path).path
+        if path == "/api/conexion":
+            self._conexion(conexion.guardar)
+            return
+        if path == "/api/conexion/comprobar":
+            self._conexion(lambda _datos: conexion.comprobar())
+            return
+        if path == "/api/conexion/base":
+            self._conexion(lambda datos: conexion.elegir_base(str(datos.get("name") or "")))
+            return
+        if path == "/api/conexion/retirar":
+            self._conexion(lambda _datos: conexion.retirar())
+            return
         name = path.removeprefix("/api/").removesuffix("/start")
         if path == f"/api/{name}/start" and name in APPS:
             payload = start_app(name)
@@ -152,6 +169,28 @@ class Handler(BaseHTTPRequestHandler):
             self._send(code, json.dumps(payload).encode("utf-8"), "application/json; charset=utf-8")
             return
         self.send_error(404)
+
+    def _json_body(self) -> dict:
+        length = int(self.headers.get("Content-Length") or 0)
+        if length <= 0 or length > 20000:
+            return {}
+        raw = self.rfile.read(length)
+        try:
+            data = json.loads(raw.decode("utf-8"))
+        except json.JSONDecodeError:
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    def _conexion(self, action) -> None:
+        try:
+            payload = action(self._json_body())
+            payload.pop("password", None)
+            self._json(200, payload)
+        except ValueError as exc:
+            self._json(400, {"ok": False, "error": str(exc)})
+
+    def _json(self, code: int, payload: dict) -> None:
+        self._send(code, json.dumps(payload).encode("utf-8"), "application/json; charset=utf-8")
 
     def _send(self, code: int, body: bytes, content_type: str) -> None:
         self.send_response(code)

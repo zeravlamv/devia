@@ -76,6 +76,77 @@
       gap: 1.25rem;
     }
 
+    .conexion {
+      grid-column: 1 / -1;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1.4rem;
+    }
+
+    .conexion h2 { font-size: 1.7rem; }
+
+    .conexion form {
+      display: grid;
+      grid-template-columns: 1.4fr 0.5fr 1fr 1fr;
+      gap: 0.7rem;
+      margin-top: 1rem;
+    }
+
+    .conexion label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .conexion input {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.55rem 0.7rem;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .conexion .acciones-acceso {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.9rem;
+    }
+
+    .conexion button {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .conexion button.secundario {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .bases {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.8rem;
+    }
+
+    .bases button {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .bases button.activa {
+      background: var(--datia);
+      color: #f4fbfb;
+      border-color: var(--datia);
+    }
+
     article {
       background: var(--card);
       border: 1px solid var(--line);
@@ -226,6 +297,7 @@
 
     @media (max-width: 980px) {
       .grid { grid-template-columns: 1fr; }
+      .conexion form { grid-template-columns: 1fr; }
       .wrap { width: min(1240px, calc(100% - 1.5rem)); }
     }
   </style>
@@ -245,6 +317,27 @@
     </header>
 
     <main class="grid">
+      <section class="conexion" id="conexion">
+        <p class="tag" style="background:#efe6d4;color:#6a4710">Servidor de datos</p>
+        <h2>Acceso de la suite</h2>
+        <p class="summary">
+          Syquo y Datia usan este servidor y la base que marques aquí. El secreto no vuelve a mostrarse.
+          Okia y el CRM siguen con su propio acceso.
+        </p>
+        <form id="form-conexion">
+          <label>Servidor<input name="host" autocomplete="off" required></label>
+          <label>Puerto<input name="port" inputmode="numeric" value="1433"></label>
+          <label>Usuario<input name="user" autocomplete="username" required></label>
+          <label>Secreto<input name="password" type="password" autocomplete="new-password" placeholder="Vacío para conservar el guardado"></label>
+        </form>
+        <div class="acciones-acceso">
+          <button type="button" id="guardar-conexion">Guardar</button>
+          <button type="button" id="comprobar-conexion" class="secundario">Comprobar</button>
+          <button type="button" id="retirar-conexion" class="secundario">Retirar</button>
+        </div>
+        <p class="note" id="conexion-nota"></p>
+        <div class="bases" id="conexion-bases"></div>
+      </section>
       <article class="syquo" data-app="syquo">
         <p class="tag">Documentos</p>
         <h2>Syquo</h2>
@@ -466,7 +559,86 @@
       card.querySelector("[data-launch]").addEventListener("click", () => launch(card));
     });
 
+    const notaConexion = document.getElementById("conexion-nota");
+    const basesConexion = document.getElementById("conexion-bases");
+    const formConexion = document.getElementById("form-conexion");
+
+    function pintarConexion(data, bases) {
+      if (!data) return;
+      formConexion.host.value = data.host || "";
+      formConexion.port.value = data.port || 1433;
+      formConexion.user.value = data.user || "";
+      formConexion.password.value = "";
+      const partes = [];
+      if (!data.present) partes.push("Todavía no hay un acceso de la suite.");
+      else if (data.usable) partes.push("En uso. Base activa: " + data.active_database + ".");
+      else if (data.message) partes.push(data.message);
+      if (data.has_secret) partes.push("Hay un secreto guardado.");
+      notaConexion.textContent = partes.join(" ");
+      basesConexion.innerHTML = "";
+      (bases || []).forEach((item) => {
+        const boton = document.createElement("button");
+        boton.type = "button";
+        boton.textContent = item.name + " · " + item.database_id;
+        if (data.active_database === item.name) boton.classList.add("activa");
+        boton.addEventListener("click", () => elegirBase(item.name));
+        basesConexion.appendChild(boton);
+      });
+    }
+
+    async function leerConexion() {
+      if (location.protocol === "file:") return;
+      try {
+        const res = await fetch("/api/conexion");
+        pintarConexion(await res.json(), []);
+      } catch (err) {
+        notaConexion.textContent = "No se pudo leer el acceso.";
+      }
+    }
+
+    function datosConexion() {
+      const data = new FormData(formConexion);
+      return {
+        host: data.get("host"),
+        port: data.get("port"),
+        user: data.get("user"),
+        password: data.get("password"),
+      };
+    }
+
+    async function enviarConexion(url, body) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body || {}),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        notaConexion.textContent = data.error || "No se pudo completar.";
+        return null;
+      }
+      pintarConexion(data, data.databases || []);
+      return data;
+    }
+
+    async function elegirBase(name) {
+      await enviarConexion("/api/conexion/base", { name });
+    }
+
+    document.getElementById("guardar-conexion").addEventListener("click", () => {
+      enviarConexion("/api/conexion", datosConexion());
+    });
+    document.getElementById("comprobar-conexion").addEventListener("click", () => {
+      enviarConexion("/api/conexion/comprobar", {});
+    });
+    document.getElementById("retirar-conexion").addEventListener("click", () => {
+      formConexion.reset();
+      formConexion.port.value = "1433";
+      enviarConexion("/api/conexion/retirar", {});
+    });
+
     refresh();
+    leerConexion();
     setInterval(refresh, 4000);
   </script>
 </body>
