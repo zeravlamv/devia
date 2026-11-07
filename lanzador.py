@@ -1,4 +1,4 @@
-"""Lanzador local de Syquo, Datia y Okia. Escucha solo en 127.0.0.1:8090."""
+"""Lanzador local de Syquo, Datia, Okia y el CRM. Escucha solo en 127.0.0.1:8090."""
 
 from __future__ import annotations
 
@@ -33,6 +33,11 @@ APPS = {
         "relative": r"priveria\okia",
         "port": 8002,
         "python": r".venv\Scripts\python.exe",
+    },
+    "crm": {
+        "relative": r"priveria\crm",
+        "port": 8003,
+        "python": None,
     },
 }
 

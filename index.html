@@ -17,6 +17,8 @@
       --datia-soft: #dce9ea;
       --okia: #3e5c3a;
       --okia-soft: #e4eadc;
+      --crm: #243e6b;
+      --crm-soft: #e3e8f2;
       --ok: #1d6b43;
       --wait: #8a5a12;
       --bad: #8d2d2d;
@@ -70,7 +72,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 1.25rem;
     }
 
@@ -87,6 +89,7 @@
     article.syquo { box-shadow: inset 6px 0 0 var(--syquo); }
     article.datia { box-shadow: inset 6px 0 0 var(--datia); }
     article.okia { box-shadow: inset 6px 0 0 var(--okia); }
+    article.crm { box-shadow: inset 6px 0 0 var(--crm); }
 
     .tag {
       display: inline-block;
@@ -102,6 +105,7 @@
     .syquo .tag { background: var(--syquo-soft); color: var(--syquo); }
     .datia .tag { background: var(--datia-soft); color: var(--datia); }
     .okia .tag { background: var(--okia-soft); color: var(--okia); }
+    .crm .tag { background: var(--crm-soft); color: var(--crm); }
 
     h2 {
       margin: 0;
@@ -183,6 +187,7 @@
     .syquo button { background: var(--syquo); color: #fffaf6; }
     .datia button { background: var(--datia); color: #f4fbfb; }
     .okia button { background: var(--okia); color: #f7faf4; }
+    .crm button { background: var(--crm); color: #f6f8fc; }
 
     .open {
       background: transparent;
@@ -234,7 +239,7 @@
       <p class="kicker">Escritorio local</p>
       <h1>Devia</h1>
       <p class="lead">
-        Desde aquí arrancas Syquo, Datia y Okia. Cada botón abre una consola con su servidor
+        Desde aquí arrancas Syquo, Datia, Okia y el CRM. Cada botón abre una consola con su servidor
         y, cuando responde, puedes entrar en la aplicación.
       </p>
     </header>
@@ -307,11 +312,33 @@
           <a class="open" data-open href="http://127.0.0.1:8002/" target="_blank" rel="noopener" aria-disabled="true">Abrir</a>
         </div>
       </article>
+
+      <article class="crm" data-app="crm">
+        <p class="tag">Comercial</p>
+        <h2>CRM</h2>
+        <p class="summary">
+          CRM de PRiveria integrado con Sage 200. Lleva los leads, las oportunidades,
+          las ofertas y la agenda comercial. Lo propio del CRM se guarda en local y
+          lee clientes, artículos y ofertas del ERP en solo lectura. Cada usuario
+          trabaja con sus empresas.
+        </p>
+        <dl>
+          <div class="row"><dt>Carpeta</dt><dd data-folder>Buscando en E: o F:…</dd></div>
+          <div class="row"><dt>Comando</dt><dd>py manage.py runserver 8003</dd></div>
+          <div class="row"><dt>Dirección</dt><dd>http://127.0.0.1:8003/</dd></div>
+        </dl>
+        <p class="status-line down" data-status><span class="dot"></span><span data-label>Comprobando…</span></p>
+        <p class="note" data-note></p>
+        <div class="actions">
+          <button type="button" data-launch>Lanzar CRM</button>
+          <a class="open" data-open href="http://127.0.0.1:8003/" target="_blank" rel="noopener" aria-disabled="true">Abrir</a>
+        </div>
+      </article>
     </main>
 
     <footer>
       Para detener una aplicación, pulsa Ctrl+C en su consola. Cerrar esta página no apaga
-      Syquo, Datia ni Okia. El lanzador solo escucha en este equipo, en el puerto 8090.
+      Syquo, Datia, Okia ni el CRM. El lanzador solo escucha en este equipo, en el puerto 8090.
     </footer>
   </div>
 
@@ -322,7 +349,12 @@
       document.getElementById("file-banner").classList.add("show");
     }
 
-    const launchLabel = { syquo: "Lanzar Syquo", datia: "Lanzar Datia", okia: "Lanzar Okia" };
+    const launchLabel = {
+      syquo: "Lanzar Syquo",
+      datia: "Lanzar Datia",
+      okia: "Lanzar Okia",
+      crm: "Lanzar CRM",
+    };
 
     function paint(card, info, pending) {
       const line = card.querySelector("[data-status]");
