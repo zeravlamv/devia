@@ -70,19 +70,61 @@
       font-size: 1.05rem;
     }
 
+    .pestanas {
+      display: flex;
+      gap: 0.35rem;
+      margin: 0 0 1.25rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .pestanas button {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid transparent;
+      border-bottom: 0;
+      border-radius: 12px 12px 0 0;
+      margin-bottom: -1px;
+    }
+
+    .pestanas button[aria-selected="true"] {
+      background: var(--card);
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .panel { display: grid; gap: 1.25rem; }
+    .panel[hidden] { display: none; }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 1.25rem;
     }
 
+    .vacio {
+      margin: 0;
+      padding: 1.4rem;
+      background: var(--card);
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      color: var(--muted);
+    }
+
     .conexion {
-      grid-column: 1 / -1;
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 18px;
       padding: 1.4rem;
     }
+
+    .conexion-cabeza {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    #parametros-conexion[hidden] { display: none; }
 
     .conexion h2 { font-size: 1.7rem; }
 
@@ -298,6 +340,7 @@
     @media (max-width: 980px) {
       .grid { grid-template-columns: 1fr; }
       .conexion form { grid-template-columns: 1fr; }
+      .conexion-cabeza { flex-direction: column; }
       .wrap { width: min(1240px, calc(100% - 1.5rem)); }
     }
   </style>
@@ -316,28 +359,42 @@
       </p>
     </header>
 
-    <main class="grid">
+    <div class="pestanas" role="tablist">
+      <button type="button" role="tab" id="tab-suite" data-tab="suite" aria-selected="true" aria-controls="panel-suite">Suite</button>
+      <button type="button" role="tab" id="tab-personalizado" data-tab="personalizado" aria-selected="false" aria-controls="panel-personalizado">Personalizado</button>
+      <button type="button" role="tab" id="tab-test" data-tab="test" aria-selected="false" aria-controls="panel-test">Test</button>
+      <button type="button" role="tab" id="tab-interno" data-tab="interno" aria-selected="false" aria-controls="panel-interno">Interno</button>
+    </div>
+
+    <div class="panel" id="panel-suite" data-panel="suite" role="tabpanel" aria-labelledby="tab-suite">
       <section class="conexion" id="conexion">
-        <p class="tag" style="background:#efe6d4;color:#6a4710">Servidor de datos</p>
-        <h2>Acceso de la suite</h2>
+        <div class="conexion-cabeza">
+          <div>
+            <p class="tag" style="background:#efe6d4;color:#6a4710">Servidor de datos</p>
+            <h2>Acceso de la suite</h2>
+          </div>
+          <button type="button" id="toggle-conexion" class="secundario" aria-expanded="false" aria-controls="parametros-conexion">Configurar</button>
+        </div>
         <p class="summary">
           Syquo y Datia usan este servidor y la base que marques aquí. El secreto no vuelve a mostrarse.
-          Okia y el CRM siguen con su propio acceso.
         </p>
-        <form id="form-conexion">
-          <label>Servidor<input name="host" autocomplete="off" required></label>
-          <label>Puerto<input name="port" inputmode="numeric" value="1433"></label>
-          <label>Usuario<input name="user" autocomplete="username" required></label>
-          <label>Secreto<input name="password" type="password" autocomplete="new-password" placeholder="Vacío para conservar el guardado"></label>
-        </form>
-        <div class="acciones-acceso">
-          <button type="button" id="guardar-conexion">Guardar</button>
-          <button type="button" id="comprobar-conexion" class="secundario">Comprobar</button>
-          <button type="button" id="retirar-conexion" class="secundario">Retirar</button>
-        </div>
         <p class="note" id="conexion-nota"></p>
-        <div class="bases" id="conexion-bases"></div>
+        <div id="parametros-conexion" hidden>
+          <form id="form-conexion">
+            <label>Servidor<input name="host" autocomplete="off" required></label>
+            <label>Puerto<input name="port" inputmode="numeric" value="1433"></label>
+            <label>Usuario<input name="user" autocomplete="username" required></label>
+            <label>Secreto<input name="password" type="password" autocomplete="new-password" placeholder="Vacío para conservar el guardado"></label>
+          </form>
+          <div class="acciones-acceso">
+            <button type="button" id="guardar-conexion">Guardar</button>
+            <button type="button" id="comprobar-conexion" class="secundario">Comprobar</button>
+            <button type="button" id="retirar-conexion" class="secundario">Retirar</button>
+          </div>
+          <div class="bases" id="conexion-bases"></div>
+        </div>
       </section>
+      <div class="grid">
       <article class="syquo" data-app="syquo">
         <p class="tag">Documentos</p>
         <h2>Syquo</h2>
@@ -382,7 +439,11 @@
           <a class="open" data-open href="http://127.0.0.1:8001/" target="_blank" rel="noopener" aria-disabled="true">Abrir</a>
         </div>
       </article>
+      </div>
+    </div>
 
+    <div class="panel" id="panel-personalizado" data-panel="personalizado" role="tabpanel" aria-labelledby="tab-personalizado" hidden>
+      <div class="grid">
       <article class="okia" data-app="okia">
         <p class="tag">Margen</p>
         <h2>Okia</h2>
@@ -405,7 +466,11 @@
           <a class="open" data-open href="http://127.0.0.1:8002/" target="_blank" rel="noopener" aria-disabled="true">Abrir</a>
         </div>
       </article>
+      </div>
+    </div>
 
+    <div class="panel" id="panel-test" data-panel="test" role="tabpanel" aria-labelledby="tab-test" hidden>
+      <div class="grid">
       <article class="crm" data-app="crm">
         <p class="tag">Comercial</p>
         <h2>CRM</h2>
@@ -427,7 +492,12 @@
           <a class="open" data-open href="http://127.0.0.1:8003/" target="_blank" rel="noopener" aria-disabled="true">Abrir</a>
         </div>
       </article>
-    </main>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-interno" data-panel="interno" role="tabpanel" aria-labelledby="tab-interno" hidden>
+      <p class="vacio">Esta pestaña todavía no tiene aplicaciones.</p>
+    </div>
 
     <footer>
       Para detener una aplicación, pulsa Ctrl+C en su consola. Cerrar esta página no apaga
@@ -557,6 +627,27 @@
 
     cards.forEach((card) => {
       card.querySelector("[data-launch]").addEventListener("click", () => launch(card));
+    });
+
+    document.querySelectorAll("[data-tab]").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const name = tab.dataset.tab;
+        document.querySelectorAll("[data-tab]").forEach((item) => {
+          item.setAttribute("aria-selected", item === tab ? "true" : "false");
+        });
+        document.querySelectorAll("[data-panel]").forEach((panel) => {
+          panel.hidden = panel.dataset.panel !== name;
+        });
+      });
+    });
+
+    const toggleConexion = document.getElementById("toggle-conexion");
+    const parametrosConexion = document.getElementById("parametros-conexion");
+    toggleConexion.addEventListener("click", () => {
+      const abierto = toggleConexion.getAttribute("aria-expanded") === "true";
+      toggleConexion.setAttribute("aria-expanded", abierto ? "false" : "true");
+      parametrosConexion.hidden = abierto;
+      toggleConexion.textContent = abierto ? "Configurar" : "Ocultar";
     });
 
     const notaConexion = document.getElementById("conexion-nota");
